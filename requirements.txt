@@ -1,0 +1,16 @@
+# jupyter kernel to run cells in vscode
+ipykernel
+
+# stuff necessary for chapter 0.0
+einops
+numpy
+torch
+plotly
+nbformat
+
+# stuff necessary for chapter 0.1
+ipywidgets
+jaxtyping
+tqdm
+pandas
+anywidget
