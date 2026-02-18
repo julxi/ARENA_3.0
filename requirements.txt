@@ -14,3 +14,10 @@ jaxtyping
 tqdm
 pandas
 anywidget
+
+# stuff necessary for chapter 0.2
+torchinfo
+pillow
+rich
+torchvision
+matplotlib
