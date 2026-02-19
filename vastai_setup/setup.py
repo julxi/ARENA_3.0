@@ -2,12 +2,15 @@ from dotenv import load_dotenv
 import os
 from vastai_sdk import VastAI
 from fabric import Connection
+from git import Repo
 
-# get
+# get env
 load_dotenv(".env")
 load_dotenv(".env.local")
 load_dotenv("vastai_setup/.env.vastai")
 
+# access local repo
+repo = Repo()
 
 # get ip_addr & port
 vastai_api_key = os.getenv("VASTAI_API_KEY")
@@ -43,6 +46,8 @@ remote_workdir = os.getenv("REMOTE_WORKDIR")
 remote_python = os.getenv("REMOTE_PYTHON")
 repo_url = os.getenv("REPO_URL")
 repo_name = os.getenv("REPO_NAME")
+git_user_name = repo.config_reader().get_values(section="user", option="name")[0]
+git_user_email = repo.config_reader().get_values(section="user", option="email")[0]
 
 with Connection(
     host=ip_addr,
@@ -67,3 +72,5 @@ with Connection(
         warn=True,
     )
     conn.put(".env.local", remote=f"{remote_workdir}/{repo_name}/.env.local")
+    conn.run(f'git config --global user.name "{git_user_name}"', warn=True)
+    conn.run(f'git config --global user.email "{git_user_email}"', warn=True)
