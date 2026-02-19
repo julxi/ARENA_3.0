@@ -23,24 +23,22 @@ from torch.utils.data import DataLoader, DistributedSampler
 from torchvision import datasets, transforms
 from tqdm import tqdm
 
-# Make sure exercises are in the path
-chapter = "chapter0_fundamentals"
-section = "part3_optimization"
-root_dir = next(p for p in Path.cwd().parents if (p / chapter).exists())
-exercises_dir = root_dir / chapter / "exercises"
-section_dir = exercises_dir / section
-if str(exercises_dir) not in sys.path:
-    sys.path.append(str(exercises_dir))
 
 MAIN = __name__ == "__main__"
 
-import part3_optimization.tests as tests
-from part2_cnns.solutions import Linear, ResNet34, get_resnet_for_feature_extraction
-from part3_optimization.utils import plot_fn, plot_fn_with_points
-from plotly_utils import bar, imshow, line
+from . import tests
+from src.chapter0_fundamentals.part2_cnns.solutions import (
+    Linear,
+    ResNet34,
+    get_resnet_for_feature_extraction,
+)
+from .utils import plot_fn, plot_fn_with_points
+from src.plotly_utils import bar, imshow, line
 
 device = t.device(
-    "mps" if t.backends.mps.is_available() else "cuda" if t.cuda.is_available() else "cpu"
+    "mps"
+    if t.backends.mps.is_available()
+    else "cuda" if t.cuda.is_available() else "cpu"
 )
 
 # %%
@@ -76,7 +74,9 @@ def opt_fn_with_sgd(
 
     optimizer = optim.SGD((xy,), lr=lr, momentum=momentum)
 
-    xy_list = [xy.detach().clone()]  # so we don't unintentionally modify past values in `xy_list`
+    xy_list = [
+        xy.detach().clone()
+    ]  # so we don't unintentionally modify past values in `xy_list`
 
     for i in range(n_iters):
         fn(xy[0], xy[1]).backward()
@@ -103,7 +103,9 @@ if MAIN:
         points.append((xys, optimizer_class, params))
         print(f"{params=}, last point={xys[-1]}")
 
-    plot_fn_with_points(pathological_curve_loss, points=points, min_points=[(0, "y_min")])
+    plot_fn_with_points(
+        pathological_curve_loss, points=points, min_points=[(0, "y_min")]
+    )
 
 # %%
 
@@ -176,7 +178,9 @@ class RMSprop:
         Like the PyTorch version, but assumes centered=False
             https://pytorch.org/docs/stable/generated/torch.optim.RMSprop.html
         """
-        self.params = list(params)  # turn params into a list (because it might be a generator)
+        self.params = list(
+            params
+        )  # turn params into a list (because it might be a generator)
         self.lr = lr
         self.eps = eps
         self.mu = momentum
@@ -374,7 +378,9 @@ if MAIN:
         )
         points.append((xys, optimizer_class, params))
 
-    plot_fn_with_points(pathological_curve_loss, min_points=[(0, "y_min")], points=points)
+    plot_fn_with_points(
+        pathological_curve_loss, min_points=[(0, "y_min")], points=points
+    )
 
 # %%
 
@@ -395,9 +401,15 @@ def neg_trimodal_func(x, y):
     non-adaptive methods can fail to converge to them in the first place given how shallow the
     gradients are everywhere except in the close vicinity of the minima.
     """
-    z = -bivariate_gaussian(x, y, x_mean=means[0][0], y_mean=means[0][1], x_sig=0.2, y_sig=0.2)
-    z -= bivariate_gaussian(x, y, x_mean=means[1][0], y_mean=means[1][1], x_sig=0.2, y_sig=0.2)
-    z -= bivariate_gaussian(x, y, x_mean=means[2][0], y_mean=means[2][1], x_sig=0.2, y_sig=0.2)
+    z = -bivariate_gaussian(
+        x, y, x_mean=means[0][0], y_mean=means[0][1], x_sig=0.2, y_sig=0.2
+    )
+    z -= bivariate_gaussian(
+        x, y, x_mean=means[1][0], y_mean=means[1][1], x_sig=0.2, y_sig=0.2
+    )
+    z -= bivariate_gaussian(
+        x, y, x_mean=means[2][0], y_mean=means[2][1], x_sig=0.2, y_sig=0.2
+    )
     return z
 
 
@@ -454,10 +466,17 @@ class SGD:
         for param_group in params:
             # Set hyperparameters hierarchically: specified for group > specified as a keyword
             # argument > default value. We do this via dict merge (right takes precedence over left).
-            param_group = {"momentum": 0.0, "weight_decay": 0.0, **kwargs, **param_group}
+            param_group = {
+                "momentum": 0.0,
+                "weight_decay": 0.0,
+                **kwargs,
+                **param_group,
+            }
 
             # Check that "lr" is supplied
-            assert "lr" in param_group, "Error: one of the param groups didn't specify 'lr'"
+            assert (
+                "lr" in param_group
+            ), "Error: one of the param groups didn't specify 'lr'"
 
             # Set "params" and "b" in our group
             param_group["b"] = [t.zeros_like(p) for p in param_group["params"]]
@@ -483,9 +502,13 @@ class SGD:
             for b, theta in zip(param_group["b"], param_group["params"]):
                 g = theta.grad
                 if lmda != 0:
-                    g = g + lmda * theta  # not inplace, since we're not changing theta.grad
+                    g = (
+                        g + lmda * theta
+                    )  # not inplace, since we're not changing theta.grad
                 if mu != 0:
-                    b.copy_(mu * b + g)  # needs to be inplace, since we're changing `self.b` value
+                    b.copy_(
+                        mu * b + g
+                    )  # needs to be inplace, since we're changing `self.b` value
                     g = b
                 theta -= lr * g  # inplace operation, to modify params
 
@@ -557,8 +580,12 @@ class ResNetFinetuner:
             weight_decay=self.args.weight_decay,
         )
         self.trainset, self.testset = get_cifar()
-        self.train_loader = DataLoader(self.trainset, batch_size=self.args.batch_size, shuffle=True)
-        self.test_loader = DataLoader(self.testset, batch_size=self.args.batch_size, shuffle=False)
+        self.train_loader = DataLoader(
+            self.trainset, batch_size=self.args.batch_size, shuffle=True
+        )
+        self.test_loader = DataLoader(
+            self.testset, batch_size=self.args.batch_size, shuffle=False
+        )
         self.logged_variables = {"loss": [], "accuracy": []}
         self.examples_seen = 0
 
@@ -611,7 +638,9 @@ class ResNetFinetuner:
 
             accuracy = self.evaluate()
             pbar.set_postfix(
-                loss=f"{loss:.3f}", accuracy=f"{accuracy:.2f}", ex_seen=f"{self.examples_seen:06}"
+                loss=f"{loss:.3f}",
+                accuracy=f"{accuracy:.2f}",
+                ex_seen=f"{self.examples_seen:06}",
             )
 
         return self.logged_variables
@@ -629,7 +658,11 @@ if MAIN:
         x_max=len(logged_variables["loss"][: 391 * 3 + 1] * args.batch_size),
         yaxis2_range=[0, 1],
         use_secondary_yaxis=True,
-        labels={"x": "Examples seen", "y1": "Cross entropy loss", "y2": "Test Accuracy"},
+        labels={
+            "x": "Examples seen",
+            "y1": "Cross entropy loss",
+            "y2": "Test Accuracy",
+        },
         title="Feature extraction with ResNet34",
         width=800,
     )
@@ -637,7 +670,9 @@ if MAIN:
 # %%
 
 
-def test_resnet_on_random_input(model: ResNet34, n_inputs: int = 3, seed: int | None = 42):
+def test_resnet_on_random_input(
+    model: ResNet34, n_inputs: int = 3, seed: int | None = 42
+):
     if seed is not None:
         np.random.seed(seed)
     indices = np.random.choice(len(cifar_trainset), n_inputs).tolist()
@@ -652,7 +687,14 @@ def test_resnet_on_random_input(model: ResNet34, n_inputs: int = 3, seed: int | 
         probs = probs.unsqueeze(0)
     for img, label, prob in zip(imgs, classes, probs):
         display(HTML(f"<h2>Classification probabilities (true class = {label})</h2>"))
-        imshow(img, width=200, height=200, margin=0, xaxis_visible=False, yaxis_visible=False)
+        imshow(
+            img,
+            width=200,
+            height=200,
+            margin=0,
+            xaxis_visible=False,
+            yaxis_visible=False,
+        )
         bar(
             prob,
             x=cifar_trainset.classes,
@@ -684,7 +726,9 @@ class WandbResNetFinetuner(ResNetFinetuner):
     def pre_training_setup(self):
         """Initializes the wandb run using `wandb.init` and `wandb.watch`."""
         super().pre_training_setup()
-        wandb.init(project=self.args.wandb_project, name=self.args.wandb_name, config=self.args)
+        wandb.init(
+            project=self.args.wandb_project, name=self.args.wandb_name, config=self.args
+        )
         wandb.watch(self.model.out_layers[-1], log="all", log_freq=50)
         self.examples_seen = 0
 
@@ -733,11 +777,15 @@ class WandbResNetFinetuner(ResNetFinetuner):
             pbar = tqdm(self.train_loader, desc="Training")
             for imgs, labels in pbar:
                 loss = self.training_step(imgs, labels)
-                pbar.set_postfix(loss=f"{loss:.3f}", ex_seen=f"{self.examples_seen=:06}")
+                pbar.set_postfix(
+                    loss=f"{loss:.3f}", ex_seen=f"{self.examples_seen=:06}"
+                )
 
             accuracy = self.evaluate()
             pbar.set_postfix(
-                loss=f"{loss:.3f}", accuracy=f"{accuracy:.2f}", ex_seen=f"{self.examples_seen=:06}"
+                loss=f"{loss:.3f}",
+                accuracy=f"{accuracy:.2f}",
+                ex_seen=f"{self.examples_seen=:06}",
             )
 
         wandb.finish()
@@ -774,7 +822,9 @@ def update_args(
     args.learning_rate = sampled_parameters["learning_rate"]
     args.batch_size = sampled_parameters["batch_size"]
     args.weight_decay = (
-        sampled_parameters["weight_decay"] if sampled_parameters["weight_decay_bool"] else 0.0
+        sampled_parameters["weight_decay"]
+        if sampled_parameters["weight_decay_bool"]
+        else 0.0
     )
     return args
 
@@ -851,7 +901,9 @@ if MAIN:
 
 if MAIN:
     assert t.cuda.is_available()
-    assert t.cuda.device_count() > 1, "This example requires at least 2 GPUs per machine"
+    assert (
+        t.cuda.device_count() > 1
+    ), "This example requires at least 2 GPUs per machine"
 
 # %%
 
@@ -955,7 +1007,9 @@ def run_simple_model(rank, world_size):
     dist.init_process_group(backend="nccl", rank=rank, world_size=world_size)
 
     device = t.device(f"cuda:{rank}")
-    model = SimpleModel().to(device)  # Move the model to the device corresponding to this process
+    model = SimpleModel().to(
+        device
+    )  # Move the model to the device corresponding to this process
     optimizer = t.optim.SGD(model.parameters(), lr=0.1)
 
     input = t.tensor([rank], dtype=t.float32, device=device)
@@ -1019,7 +1073,9 @@ class DistResNetTrainer:
                 # dist.broadcast(param.data, src=0)
 
         self.optimizer = t.optim.AdamW(
-            self.model.parameters(), lr=self.args.learning_rate, weight_decay=self.args.weight_decay
+            self.model.parameters(),
+            lr=self.args.learning_rate,
+            weight_decay=self.args.weight_decay,
         )
 
         self.trainset, self.testset = get_cifar()
@@ -1090,7 +1146,9 @@ class DistResNetTrainer:
         self.model.eval()
         total_correct, total_samples = 0, 0
 
-        for imgs, labels in tqdm(self.test_loader, desc="Evaluating", disable=self.rank != 0):
+        for imgs, labels in tqdm(
+            self.test_loader, desc="Evaluating", disable=self.rank != 0
+        ):
             imgs, labels = imgs.to(self.device), labels.to(self.device)
             logits = self.model(imgs)
             total_correct += (logits.argmax(dim=1) == labels).sum().item()
@@ -1124,7 +1182,9 @@ class DistResNetTrainer:
             pbar = tqdm(self.train_loader, desc="Training", disable=self.rank != 0)
             for imgs, labels in pbar:
                 loss = self.training_step(imgs, labels)
-                pbar.set_postfix(loss=f"{loss:.3f}", ex_seen=f"{self.examples_seen=:06}")
+                pbar.set_postfix(
+                    loss=f"{loss:.3f}", ex_seen=f"{self.examples_seen=:06}"
+                )
 
             accuracy = self.evaluate()
 
@@ -1193,7 +1253,9 @@ if MAIN:
 # %%
 
 
-def ring_all_reduce(tensor: Tensor, rank, world_size, op: Literal["sum", "mean"] = "sum") -> None:
+def ring_all_reduce(
+    tensor: Tensor, rank, world_size, op: Literal["sum", "mean"] = "sum"
+) -> None:
     """
     Ring all_reduce implementation using non-blocking send/recv to avoid deadlock.
     """

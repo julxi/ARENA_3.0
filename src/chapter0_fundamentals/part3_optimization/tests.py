@@ -13,6 +13,8 @@ from sklearn.datasets import make_moons
 from torch import Tensor, nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 
+from .solutions import WandbResNetFinetuningArgs
+
 
 def _get_moon_data(unsqueeze_y=False):
     X, y = make_moons(n_samples=512, noise=0.05, random_state=354)
@@ -141,7 +143,9 @@ def format_name(name):
 def format_config(config, line_breaks=False):
     if isinstance(config, dict):
         if line_breaks:
-            s = "<br>   " + "<br>   ".join([f"{key}={value}" for key, value in config.items()])
+            s = "<br>   " + "<br>   ".join(
+                [f"{key}={value}" for key, value in config.items()]
+            )
         else:
             s = ", ".join([f"{key}={value}" for key, value in config.items()])
     else:
@@ -277,8 +281,12 @@ def get_sgd_optimizer(model, opt_config, SGD):
     else:
         opt_params = [d.copy() for d in opt_config[0]]
         _opt_config = opt_config[1]
-        weight_params = [param for name, param in model.named_parameters() if "weight" in name]
-        bias_params = [param for name, param in model.named_parameters() if "bias" in name]
+        weight_params = [
+            param for name, param in model.named_parameters() if "weight" in name
+        ]
+        bias_params = [
+            param for name, param in model.named_parameters() if "bias" in name
+        ]
         for param_group in opt_params:
             param_group["params"] = (
                 weight_params if param_group["params"] == "weights" else bias_params
@@ -484,7 +492,9 @@ def plot_results(loss_list, accuracy_list):
             ),
             secondary_y=True,
         )
-    fig.update_layout(template="simple_white", title_text="Training loss & accuracy on CIFAR10")
+    fig.update_layout(
+        template="simple_white", title_text="Training loss & accuracy on CIFAR10"
+    )
     fig.show()
 
 
@@ -497,15 +507,15 @@ def show_cifar_images(trainset, rows=3, cols=5):
 
 
 def test_sweep_config(sweep_config):
-    assert sweep_config.get("method", None) == sweep_config_expected["method"], (
-        "Incorrect sweep method"
-    )
-    assert sweep_config.get("metric", None) == sweep_config_expected["metric"], (
-        "Incorrect sweep metric"
-    )
-    assert isinstance(sweep_config.get("parameters", None), dict), (
-        "Sweep parameters should be a dictionary"
-    )
+    assert (
+        sweep_config.get("method", None) == sweep_config_expected["method"]
+    ), "Incorrect sweep method"
+    assert (
+        sweep_config.get("metric", None) == sweep_config_expected["metric"]
+    ), "Incorrect sweep metric"
+    assert isinstance(
+        sweep_config.get("parameters", None), dict
+    ), "Sweep parameters should be a dictionary"
 
     for k, v in sweep_config["parameters"].items():
         assert sorted(v.keys()) in [
@@ -541,9 +551,10 @@ def _sample_from_sweep_config(config):
 
 
 def test_update_args(update_args, sweep_config):
-    from part3_optimization.solutions import WandbResNetFinetuningArgs
 
-    args = WandbResNetFinetuningArgs(batch_size=1, epochs=10, learning_rate=1.0, weight_decay=1.0)
+    args = WandbResNetFinetuningArgs(
+        batch_size=1, epochs=10, learning_rate=1.0, weight_decay=1.0
+    )
     args_dict = deepcopy(args.__dict__)
 
     # First, check if sampling even works correctly
@@ -573,26 +584,26 @@ def test_update_args(update_args, sweep_config):
     # (1/3) test learning rate
     min_lr = min([arg.learning_rate for arg in args])
     max_lr = max([arg.learning_rate for arg in args])
-    assert abs(min_lr / 1e-4 - 1.0) < 0.1 and abs(max_lr / 1e-1 - 1.0) < 0.1, (
-        "Unexpected learning rate distribution"
-    )
+    assert (
+        abs(min_lr / 1e-4 - 1.0) < 0.1 and abs(max_lr / 1e-1 - 1.0) < 0.1
+    ), "Unexpected learning rate distribution"
     # (2/3) test batch size
     batch_sizes = [arg.batch_size for arg in args]
     assert set(batch_sizes) == {32, 64, 128, 256}, "Unexpected batch size distribution"
     counts = [batch_sizes.count(b) for b in [32, 64, 128, 256]]
-    assert all(abs(c - n_samples // 4) < 100 for c in counts), (
-        f"Unexpected batch size distribution, should be uniform over [32, 64, 128, 256] but found frequencies {counts}"
-    )
+    assert all(
+        abs(c - n_samples // 4) < 100 for c in counts
+    ), f"Unexpected batch size distribution, should be uniform over [32, 64, 128, 256] but found frequencies {counts}"
     # (3/3) test weight decay
     wd_nonzero = [arg.weight_decay for arg in args if arg.weight_decay > 1e-8]
-    assert abs(len(wd_nonzero) - n_samples // 2) < 100, (
-        f"Unexpected distribution of weight decay values: half should be nonzero, found {len(wd_nonzero)}/{n_samples} nonzero"
-    )
+    assert (
+        abs(len(wd_nonzero) - n_samples // 2) < 100
+    ), f"Unexpected distribution of weight decay values: half should be nonzero, found {len(wd_nonzero)}/{n_samples} nonzero"
     min_wd = min(wd_nonzero)
     max_wd = max(wd_nonzero)
-    assert abs(min_wd / 1e-4 - 1.0) < 0.1 and abs(max_wd / 1e-2 - 1.0) < 0.1, (
-        "Unexpected learning rate distribution"
-    )
+    assert (
+        abs(min_wd / 1e-4 - 1.0) < 0.1 and abs(max_wd / 1e-2 - 1.0) < 0.1
+    ), "Unexpected learning rate distribution"
 
     # sweep_config = dict(
     #     method="random",
@@ -727,7 +738,9 @@ def run_all_reduce(rank: int, world_size: int, all_reduce):
 
         # Check and print results on all ranks
         expected = sum(tensor_list[:world_size]) / (1 if op == "sum" else world_size)
-        print(f"Rank {rank}, {op=}, expected non-reduced {expected}, got {tensor.cpu()}")
+        print(
+            f"Rank {rank}, {op=}, expected non-reduced {expected}, got {tensor.cpu()}"
+        )
         t.testing.assert_close(tensor.cpu(), expected)
 
     dist.destroy_process_group()
@@ -737,5 +750,7 @@ def test_all_reduce(all_reduce, world_size):
     # Number of processes (simulated ranks). We only have 3 tensors, so we'll use at most 3 procs
     world_size = min(world_size, 3)
     print("Running all_reduce, with initial tensors: [0, 0], [1, 2], [10, 20]")
-    mp.spawn(run_all_reduce, args=(world_size, all_reduce), nprocs=world_size, join=True)
+    mp.spawn(
+        run_all_reduce, args=(world_size, all_reduce), nprocs=world_size, join=True
+    )
     print("All tests in `test_all_reduce` passed!")
