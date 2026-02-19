@@ -42,3 +42,4 @@ infrastructure/master_files/js
 demos
 scratch
 .env.local
+**/.env.vastai
