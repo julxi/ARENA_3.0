@@ -1,6 +1,9 @@
 # jupyter kernel to run cells in vscode
 ipykernel
 
+# managing environments
+python-dotenv
+
 # stuff necessary for chapter 0.0
 einops
 numpy

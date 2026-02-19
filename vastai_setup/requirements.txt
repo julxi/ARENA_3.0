@@ -1,0 +1,2 @@
+vastai_sdk
+fabric

@@ -16,3 +16,7 @@ Then I use VS code to run the notebooks in `notebooks`
 
 First install jupyter extension to vm.
 Here it's just `uv pip instrall -r requirements.txt` (using the preactivated environment `main` managed in conda)
+
+#### Using semi-automatic setup
+
+see vastai_setup
