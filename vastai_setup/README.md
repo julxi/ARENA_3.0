@@ -3,4 +3,4 @@ To use this do the following (all in the `vastai_setup` folder):
 2. install `vastai_setup/requirements.txt`
 3. run `setup.py`
 
-This should setup this repo on the VM.
+This should setup this repo on the VM (except any necessary vs code extensions)

@@ -12,11 +12,13 @@ I changed the structure to my taste.
 
 Then I use VS code to run the notebooks in `notebooks`
 
-#### On vast.ai
+#### Setup on vast.ai
 
-First install jupyter extension to vm.
-Here it's just `uv pip instrall -r requirements.txt` (using the preactivated environment `main` managed in conda)
+1. connect via ssh
+2. clone
+3. Then just run `uv pip instrall -r requirements.txt` (using the preactivated environment `main` managed in conda)
+4. install vscode extenisons
 
 #### Using semi-automatic setup
 
-see vastai_setup
+see `vastai_setup/README.md`
