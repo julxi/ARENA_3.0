@@ -13,9 +13,8 @@ Arr = np.ndarray
 
 # Make sure exercises are in the path
 chapter = "chapter0_fundamentals"
-section = "part4_backprop"
-root_dir = next(p for p in Path.cwd().parents if (p / chapter).exists())
-exercises_dir = root_dir / chapter / "exercises"
+data_dir = Path("data") / chapter
+scratch_dir = Path("scratch") / chapter
 
 
 def visualize(dataloader, filename: str | None = None):
@@ -30,7 +29,10 @@ def visualize(dataloader, filename: str | None = None):
     )
     for row in range(2):
         for col in range(5):
-            z = repeat((255 * (0.28 + 0.35 * sample[5 * row + col, 0])).numpy().astype(int), "h w -> h w 3")
+            z = repeat(
+                (255 * (0.28 + 0.35 * sample[5 * row + col, 0])).numpy().astype(int),
+                "h w -> h w 3",
+            )
             fig.add_trace(go.Image(z=z), row=row + 1, col=col + 1)
 
     fig.update_xaxes(showticklabels=False).update_yaxes(showticklabels=False)
@@ -48,18 +50,24 @@ def get_mnist(subsample: int | None = None) -> tuple[DataLoader, DataLoader]:
     if subsample is None:
         subsample = 1
     print("Preprocessing data...")
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.28,), (0.35,))])
+    transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize((0.28,), (0.35,))]
+    )
     train_indexes = range(0, len(mnist_train), subsample)
     train_reduced = [mnist_train[i] for i in train_indexes]
     train_tensors = t.utils.data.TensorDataset(
-        t.stack([transform(img) for img, label in tqdm(train_reduced, desc="Training data")]),
+        t.stack(
+            [transform(img) for img, label in tqdm(train_reduced, desc="Training data")]
+        ),
         t.tensor([label for img, label in train_reduced]),
     )
 
     test_indexes = range(0, len(mnist_test), subsample)
     test_reduced = [mnist_test[i] for i in test_indexes]
     test_tensors = t.utils.data.TensorDataset(
-        t.stack([transform(img) for img, label in tqdm(test_reduced, desc="Test data")]),
+        t.stack(
+            [transform(img) for img, label in tqdm(test_reduced, desc="Test data")]
+        ),
         t.tensor([label for img, label in test_reduced]),
     )
 
