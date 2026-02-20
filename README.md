@@ -12,13 +12,23 @@ I changed the structure to my taste.
 
 Then I use VS code to run the notebooks in `notebooks`
 
-#### Setup on vast.ai
+### Setup on vast.ai
 
 1. connect via ssh
 2. clone
 3. Then just run `uv pip instrall -r requirements.txt` (using the preactivated environment `main` managed in conda)
 4. install vscode extenisons
 
-#### Using semi-automatic setup
+#### Semi-automatic Setup
+
+##### Details
 
 see `vastai_setup/README.md`
+
+##### Quick refresher
+
+Copy `Instance ID` into `vastai_setup/.env.vastai`
+
+Then run `python vastai_setup/setup.py`
+
+![img/vastai_id.png](img/vastai_id.png)
