@@ -9,12 +9,9 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from tqdm import tqdm
 
-Arr = np.ndarray
+from src.chapter0_fundamentals import scratch_dir
 
-# Make sure exercises are in the path
-chapter = "chapter0_fundamentals"
-data_dir = Path("data") / chapter
-scratch_dir = Path("scratch") / chapter
+Arr = np.ndarray
 
 
 def visualize(dataloader, filename: str | None = None):

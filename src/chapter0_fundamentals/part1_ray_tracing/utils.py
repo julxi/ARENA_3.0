@@ -1,9 +1,11 @@
 import plotly.graph_objects as go
 import torch as t
 
+from src.chapter0_fundamentals import data_dir
+
 
 def load_pikachu():
-    return t.load("data/pikachu.pt", weights_only=True)
+    return t.load(data_dir / "pikachu.pt", weights_only=True)
 
 
 def render_lines_with_plotly(

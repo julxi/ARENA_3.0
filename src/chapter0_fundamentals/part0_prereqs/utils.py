@@ -5,6 +5,8 @@ import einops
 import numpy as np
 import plotly.express as px
 
+from src.chapter0_fundamentals import data_dir, scratch_dir
+
 
 def display_array_as_img(img_array, filename: str | None = None):
     """
@@ -38,7 +40,6 @@ def display_array_as_img(img_array, filename: str | None = None):
 
 
 def copy_number_pic_array():
-    data_dir = Path("data")
     return np.load(data_dir / "numbers.npy").copy()
 
 
