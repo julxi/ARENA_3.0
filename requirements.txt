@@ -28,3 +28,6 @@ matplotlib
 # stuff necessary for chapter 0.3
 wandb
 scikit-learn
+
+# stuff necessary for chapter 0.5
+datasets

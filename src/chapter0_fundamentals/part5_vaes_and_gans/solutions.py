@@ -19,23 +19,31 @@ from torch.utils.data import DataLoader, Dataset, Subset
 from torchvision import datasets, transforms
 from tqdm import tqdm
 
-# Make sure exercises are in the path
-chapter = "chapter0_fundamentals"
-section = "part5_vaes_and_gans"
-root_dir = next(p for p in Path.cwd().parents if (p / chapter).exists())
-exercises_dir = root_dir / chapter / "exercises"
-section_dir = exercises_dir / section
-if str(exercises_dir) not in sys.path:
-    sys.path.append(str(exercises_dir))
 
 MAIN = __name__ == "__main__"
 
-import part5_vaes_and_gans.tests as tests
-import part5_vaes_and_gans.utils as utils
-from plotly_utils import imshow
+from . import tests
+from . import utils
+from src.plotly_utils import imshow
+from src.chapter0_fundamentals.part2_cnns.solutions import (
+    BatchNorm2d,
+    Conv2d,
+    Linear,
+    ReLU,
+    Sequential,
+    IntOrPair,
+    conv1d_minimal,
+    conv2d_minimal,
+    force_pair,
+    pad1d,
+    pad2d,
+)
+
 
 device = t.device(
-    "mps" if t.backends.mps.is_available() else "cuda" if t.cuda.is_available() else "cpu"
+    "mps"
+    if t.backends.mps.is_available()
+    else "cuda" if t.cuda.is_available() else "cpu"
 )
 
 # %%
@@ -147,7 +155,9 @@ if MAIN:
             if len(HOLDOUT_DATA) == 10:
                 break
     HOLDOUT_DATA = (
-        t.stack([HOLDOUT_DATA[i] for i in range(10)]).to(dtype=t.float, device=device).unsqueeze(1)
+        t.stack([HOLDOUT_DATA[i] for i in range(10)])
+        .to(dtype=t.float, device=device)
+        .unsqueeze(1)
     )
 
     display_data(HOLDOUT_DATA, nrows=1, title="MNIST holdout data")
@@ -156,7 +166,6 @@ if MAIN:
 
 # Importing all modules you'll need, from previous solutions (you're encouraged to substitute your
 # own implementations instead, if you want to!)
-from part2_cnns.solutions import BatchNorm2d, Conv2d, Linear, ReLU, Sequential
 
 
 class Autoencoder(nn.Module):
@@ -223,12 +232,16 @@ class AutoencoderTrainer:
     def __init__(self, args: AutoencoderArgs):
         self.args = args
         self.trainset = get_dataset(args.dataset)
-        self.trainloader = DataLoader(self.trainset, batch_size=args.batch_size, shuffle=True)
+        self.trainloader = DataLoader(
+            self.trainset, batch_size=args.batch_size, shuffle=True
+        )
         self.model = Autoencoder(
             latent_dim_size=args.latent_dim_size,
             hidden_dim_size=args.hidden_dim_size,
         ).to(device)
-        self.optimizer = t.optim.Adam(self.model.parameters(), lr=args.lr, betas=args.betas)
+        self.optimizer = t.optim.Adam(
+            self.model.parameters(), lr=args.lr, betas=args.betas
+        )
 
     def training_step(self, img: Tensor) -> Tensor:
         """
@@ -259,13 +272,18 @@ class AutoencoderTrainer:
         ), "First call should come after a training step. Remember to increment `self.step`."
         output = self.model(HOLDOUT_DATA)
         if self.args.use_wandb:
-            output = (output - output.min()) / (output.max() - output.min())  # Normalize to [0, 1]
+            output = (output - output.min()) / (
+                output.max() - output.min()
+            )  # Normalize to [0, 1]
             output = (output * 255).to(dtype=t.uint8)  # Convert to uint8 for logging
             wandb.log(
-                {"images": [wandb.Image(arr) for arr in output.cpu().numpy()]}, step=self.step
+                {"images": [wandb.Image(arr) for arr in output.cpu().numpy()]},
+                step=self.step,
             )
         else:
-            display_data(t.concat([HOLDOUT_DATA, output]), nrows=2, title="AE reconstructions")
+            display_data(
+                t.concat([HOLDOUT_DATA, output]), nrows=2, title="AE reconstructions"
+            )
 
     def train(self) -> Autoencoder:
         """Performs a full training run."""
@@ -276,11 +294,15 @@ class AutoencoderTrainer:
 
         for epoch in range(self.args.epochs):
             # Iterate over training data, performing a training step for each batch
-            progress_bar = tqdm(self.trainloader, total=int(len(self.trainloader)), ascii=True)
+            progress_bar = tqdm(
+                self.trainloader, total=int(len(self.trainloader)), ascii=True
+            )
             for img, label in progress_bar:  # remember that label is not used
                 img = img.to(device)
                 loss = self.training_step(img)
-                progress_bar.set_description(f"{epoch=:02d}, {loss=:.4f}, step={self.step:05d}")
+                progress_bar.set_description(
+                    f"{epoch=:02d}, {loss=:.4f}, step={self.step:05d}"
+                )
                 if self.step % self.args.log_every_n_steps == 0:
                     self.log_samples()
 
@@ -306,7 +328,9 @@ def create_grid_of_latents(
     x = t.linspace(*interpolation_range, n_points)
     grid_latent[..., dims[0]] = x.unsqueeze(-1)  # rows vary over dim=0
     grid_latent[..., dims[1]] = x  # cols vary over dim=1
-    return grid_latent.flatten(0, 1)  # flatten over (rows, cols) into a single batch dimension
+    return grid_latent.flatten(
+        0, 1
+    )  # flatten over (rows, cols) into a single batch dimension
 
 
 if MAIN:
@@ -316,7 +340,9 @@ if MAIN:
     output = autoencoder.decoder(grid_latent)
 
     # Visualize the output
-    utils.visualise_output(output, grid_latent, title="Autoencoder latent space visualization")
+    utils.visualise_output(
+        output, grid_latent, title="Autoencoder latent space visualization"
+    )
 
 # %%
 
@@ -412,7 +438,9 @@ class VAETrainer:
             latent_dim_size=args.latent_dim_size,
             hidden_dim_size=args.hidden_dim_size,
         ).to(device)
-        self.optimizer = t.optim.Adam(self.model.parameters(), lr=args.lr, betas=args.betas)
+        self.optimizer = t.optim.Adam(
+            self.model.parameters(), lr=args.lr, betas=args.betas
+        )
 
     def training_step(self, img: Tensor):
         """
@@ -457,13 +485,18 @@ class VAETrainer:
         ), "First call should come after a training step. Remember to increment `self.step`."
         output = self.model(HOLDOUT_DATA)[0]
         if self.args.use_wandb:
-            output = (output - output.min()) / (output.max() - output.min())  # Normalize to [0, 1]
+            output = (output - output.min()) / (
+                output.max() - output.min()
+            )  # Normalize to [0, 1]
             output = (output * 255).to(dtype=t.uint8)  # Convert to uint8 for logging
             wandb.log(
-                {"images": [wandb.Image(arr) for arr in output.cpu().numpy()]}, step=self.step
+                {"images": [wandb.Image(arr) for arr in output.cpu().numpy()]},
+                step=self.step,
             )
         else:
-            display_data(t.concat([HOLDOUT_DATA, output]), nrows=2, title="VAE reconstructions")
+            display_data(
+                t.concat([HOLDOUT_DATA, output]), nrows=2, title="VAE reconstructions"
+            )
 
     def train(self) -> VAE:
         """Performs a full training run."""
@@ -474,12 +507,16 @@ class VAETrainer:
 
         for epoch in range(self.args.epochs):
             # Iterate over training data, performing a training step for each batch
-            progress_bar = tqdm(self.trainloader, total=int(len(self.trainloader)), ascii=True)
+            progress_bar = tqdm(
+                self.trainloader, total=int(len(self.trainloader)), ascii=True
+            )
             for img, label in progress_bar:  # remember that label is not used
                 img = img.to(device)
                 loss = self.training_step(img)
                 self.step += 1
-                progress_bar.set_description(f"{epoch=:02d}, {loss=:.4f}, batches={self.step:05d}")
+                progress_bar.set_description(
+                    f"{epoch=:02d}, {loss=:.4f}, batches={self.step:05d}"
+                )
                 if self.step % self.args.log_every_n_steps == 0:
                     self.log_samples()
 
@@ -573,7 +610,9 @@ class Generator(nn.Module):
                 the generator)
         """
         n_layers = len(hidden_channels)
-        assert img_size % (2**n_layers) == 0, "activation size must double at each layer"
+        assert (
+            img_size % (2**n_layers) == 0
+        ), "activation size must double at each layer"
 
         super().__init__()
 
@@ -650,7 +689,9 @@ class Discriminator(nn.Module):
                 chronological order for the discriminator)
         """
         n_layers = len(hidden_channels)
-        assert img_size % (2**n_layers) == 0, "activation size must double at each layer"
+        assert (
+            img_size % (2**n_layers) == 0
+        ), "activation size must double at each layer"
 
         super().__init__()
 
@@ -733,7 +774,9 @@ def initialize_weights(model: nn.Module) -> None:
 
 
 if MAIN:
-    tests.test_initialize_weights(initialize_weights, ConvTranspose2d, Conv2d, Linear, BatchNorm2d)
+    tests.test_initialize_weights(
+        initialize_weights, ConvTranspose2d, Conv2d, Linear, BatchNorm2d
+    )
 
 # %%
 
@@ -780,7 +823,9 @@ class DCGANTrainer:
             self.trainset, batch_size=args.batch_size, shuffle=True, num_workers=8
         )
 
-        batch, img_channels, img_height, img_width = next(iter(self.trainloader))[0].shape
+        batch, img_channels, img_height, img_width = next(iter(self.trainloader))[
+            0
+        ].shape
         assert img_height == img_width
 
         self.model = (
@@ -788,8 +833,12 @@ class DCGANTrainer:
             .to(device)
             .train()
         )
-        self.optG = t.optim.Adam(self.model.netG.parameters(), lr=args.lr, betas=args.betas)
-        self.optD = t.optim.Adam(self.model.netD.parameters(), lr=args.lr, betas=args.betas)
+        self.optG = t.optim.Adam(
+            self.model.netG.parameters(), lr=args.lr, betas=args.betas
+        )
+        self.optD = t.optim.Adam(
+            self.model.netD.parameters(), lr=args.lr, betas=args.betas
+        )
 
     def training_step_discriminator(
         self,
@@ -813,7 +862,9 @@ class DCGANTrainer:
         # Gradient descent step (with optional clipping)
         lossD.backward()
         if self.args.clip_grad_norm is not None:
-            nn.utils.clip_grad_norm_(self.model.netD.parameters(), self.args.clip_grad_norm)
+            nn.utils.clip_grad_norm_(
+                self.model.netD.parameters(), self.args.clip_grad_norm
+            )
         self.optD.step()
 
         if self.args.use_wandb:
@@ -838,7 +889,9 @@ class DCGANTrainer:
         # Gradient descent step (with optional clipping)
         lossG.backward()
         if self.args.clip_grad_norm is not None:
-            nn.utils.clip_grad_norm_(self.model.netG.parameters(), self.args.clip_grad_norm)
+            nn.utils.clip_grad_norm_(
+                self.model.netG.parameters(), self.args.clip_grad_norm
+            )
         self.optG.step()
 
         if self.args.use_wandb:
@@ -879,11 +932,15 @@ class DCGANTrainer:
             wandb.init(project=self.args.wandb_project, name=self.args.wandb_name)
 
         for epoch in range(self.args.epochs):
-            progress_bar = tqdm(self.trainloader, total=len(self.trainloader), ascii=True)
+            progress_bar = tqdm(
+                self.trainloader, total=len(self.trainloader), ascii=True
+            )
 
             for img_real, label in progress_bar:
                 # Generate random noise & fake image
-                noise = t.randn(self.args.batch_size, self.args.latent_dim_size).to(device)
+                noise = t.randn(self.args.batch_size, self.args.latent_dim_size).to(
+                    device
+                )
                 img_real = img_real.to(device)
                 img_fake = self.model.netG(noise)
 
@@ -936,15 +993,6 @@ if MAIN:
     dcgan = trainer.train()
 
 # %%
-
-from part2_cnns.solutions import (
-    IntOrPair,
-    conv1d_minimal,
-    conv2d_minimal,
-    force_pair,
-    pad1d,
-    pad2d,
-)
 
 
 def conv_transpose1d_minimal(
@@ -1057,7 +1105,9 @@ def fractional_stride_2d(
     return x_new
 
 
-def conv_transpose2d(x, weights, stride: IntOrPair = 1, padding: IntOrPair = 0) -> Tensor:
+def conv_transpose2d(
+    x, weights, stride: IntOrPair = 1, padding: IntOrPair = 0
+) -> Tensor:
     """Like torch's conv_transpose2d using bias=False
     x: shape (batch, in_channels, height, width)
     weights: shape (out_channels, in_channels, kernel_height, kernel_width)
@@ -1078,7 +1128,9 @@ def conv_transpose2d(x, weights, stride: IntOrPair = 1, padding: IntOrPair = 0) 
     # Apply modification (which is controlled by the padding parameter)
     pad_h_actual = kernel_height - 1 - padding_h
     pad_w_actual = kernel_width - 1 - padding_w
-    assert min(pad_h_actual, pad_w_actual) >= 0, "total amount padded should be positive"
+    assert (
+        min(pad_h_actual, pad_w_actual) >= 0
+    ), "total amount padded should be positive"
     x_mod = pad2d(
         x_spaced_out,
         left=pad_w_actual,
