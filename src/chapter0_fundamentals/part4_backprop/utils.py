@@ -45,8 +45,8 @@ def visualize(dataloader, filename: str | None = None):
 
 def get_mnist(subsample: int | None = None) -> tuple[DataLoader, DataLoader]:
     """Return MNIST data using the provided Tensor class."""
-    mnist_train = datasets.MNIST(f"{exercises_dir}/data", train=True, download=True)
-    mnist_test = datasets.MNIST(f"{exercises_dir}/data", train=False)
+    mnist_train = datasets.MNIST(scratch_dir, train=True, download=True)
+    mnist_test = datasets.MNIST(scratch_dir, train=False, download=True)
     if subsample is None:
         subsample = 1
     print("Preprocessing data...")
