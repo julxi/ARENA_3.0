@@ -1,0 +1,4 @@
+# vastai setup
+GitPython
+vastai_sdk
+fabric
