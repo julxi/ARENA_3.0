@@ -1,0 +1,16 @@
+# rest
+einops
+plotly
+torch
+datasets
+dotenv
+jaxtyping
+scikit-learn
+tqdm
+ipykernel
+ipywidgets
+nbformat
+
+# chatper 1
+transformer_lens
+git+https://github.com/callummcdougall/CircuitsVis.git#subdirectory=python
