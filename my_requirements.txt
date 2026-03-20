@@ -17,3 +17,10 @@ transformer_lens
 bitsandbytes
 kernels
 git+https://github.com/callummcdougall/CircuitsVis.git#subdirectory=python
+
+# 1.3.3.
+openai
+sae_lens
+sae_vis
+frozendict
+tabulate
