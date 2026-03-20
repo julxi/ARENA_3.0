@@ -1,4 +1,5 @@
 # vastai setup
+paramiko
 GitPython
 vastai_sdk
 fabric
