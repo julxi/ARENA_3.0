@@ -18,7 +18,7 @@ with make_connection(settings) as conn:
         remote=f"{settings.remote_repo_dir}/chapter1_transformer_interp/exercises/.env",
     )
     conn.run(
-        f"cd {settings.remote_repo_dir} && {settings.remote_python} chapter1_transformer_interp/exercises/part31_linear_probes/setup.py",
+        f"cd {settings.remote_repo_dir} && {settings.remote_python} chapter1_transformer_interp/exercises/part31_linear_probes/preparations.py",
         warn=True,
         hide=False,
     )

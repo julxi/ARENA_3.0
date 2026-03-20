@@ -36,7 +36,6 @@ assert (
 snapshot_download(
     repo_id="meta-llama/Llama-2-13b-hf",
 )
-
 # snapshot_download(
 #    repo_id="meta-llama/Meta-Llama-3.1-8B-Instruct",
 # )
