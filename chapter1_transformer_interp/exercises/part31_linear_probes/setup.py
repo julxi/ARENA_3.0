@@ -9,6 +9,7 @@ import os
 
 
 root_dir = Path.cwd()
+print("root_dir:", root_dir)
 exercises_dir = root_dir / "chapter1_transformer_interp" / "exercises"
 
 load_dotenv(dotenv_path=str(exercises_dir / ".env"))
