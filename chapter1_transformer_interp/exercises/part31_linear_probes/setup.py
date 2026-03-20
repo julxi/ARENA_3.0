@@ -2,7 +2,8 @@
 from dotenv import load_dotenv
 from pathlib import Path
 import git
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from huggingface_hub import snapshot_download
 import torch as t
 import os
 
@@ -31,16 +32,10 @@ assert (
     HF_TOKEN
 ), "Please set HF_TOKEN in your chapter1_transformer_interp/exercises/.env file"
 
-MODEL_NAME = "meta-llama/Llama-2-13b-hf"
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForCausalLM.from_pretrained(
-    MODEL_NAME,
-    local_files_only=True,
+snapshot_download(
+    repo_id="meta-llama/Llama-2-13b-hf",
 )
 
-INSTRUCT_MODEL_NAME = "meta-llama/Meta-Llama-3.1-8B-Instruct"
-instruct_tokenizer = AutoTokenizer.from_pretrained(INSTRUCT_MODEL_NAME)
-instruct_model = AutoModelForCausalLM.from_pretrained(
-    INSTRUCT_MODEL_NAME,
-    local_files_only=True,
-)
+# snapshot_download(
+#    repo_id="meta-llama/Meta-Llama-3.1-8B-Instruct",
+# )

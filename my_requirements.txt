@@ -12,6 +12,7 @@ ipywidgets
 nbformat
 
 # chatper 1
+huggingface_hub
 transformer_lens
 bitsandbytes
 kernels
